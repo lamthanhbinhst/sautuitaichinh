@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6 Túi Tài Chính</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Sáu Túi Tài Chính</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -13,14 +12,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        input[type="number"]::-webkit-inner-spin-button { display: none; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo, useEffect } = React;
+        const { useState, useMemo, useEffect, useCallback } = React;
 
         // --- ICONS ---
         const NECIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm3-4H7v-2h8v2zm0-4H7V7h8v2z"/></svg>;
@@ -30,18 +29,18 @@
         const PLAYIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M20.21 17.21c-.58.6-.96 1.38-1.08 2.29H4.88c-.12-.91-.5-1.69-1.08-2.29C2.61 16.03 2 14.56 2 13V8c0-1.65 1.35-3 3-3h14c1.65 0 3 1.35 3 3v5c0 1.56-.61 3.03-1.79 4.21z"/></svg>;
         const GIVEIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>;
 
-        // --- CONSTANTS ---
         const DEFAULT_JARS = [
             { id: 'NEC', name: 'Thiết yếu', percentage: 55, description: 'Ăn uống, nhà ở', color: 'bg-blue-500', icon: <NECIcon /> },
             { id: 'FFA', name: 'Tự do tài chính', percentage: 10, description: 'Đầu tư', color: 'bg-green-500', icon: <FFAIcon /> },
-            { id: 'LTS', name: 'Tiết kiệm', percentage: 10, description: 'Mua sắm lớn', color: 'bg-purple-500', icon: <LTSIcon /> },
-            { id: 'EDU', name: 'Giáo dục', percentage: 10, description: 'Học tập', color: 'bg-orange-500', icon: <EDUIcon /> },
+            { id: 'LTS', name: 'Tiết kiệm', percentage: 10, description: 'Mục tiêu lớn', color: 'bg-purple-500', icon: <LTSIcon /> },
+            { id: 'EDU', name: 'Giáo dục', percentage: 10, description: 'Phát triển bản thân', color: 'bg-orange-500', icon: <EDUIcon /> },
             { id: 'PLAY', name: 'Hưởng thụ', percentage: 10, description: 'Giải trí', color: 'bg-red-500', icon: <PLAYIcon /> },
-            { id: 'GIVE', name: 'Cho đi', percentage: 5, description: 'Từ thiện', color: 'bg-pink-500', icon: <GIVEIcon /> },
+            { id: 'GIVE', name: 'Cho đi', percentage: 5, description: 'Từ thiện, giúp đỡ', color: 'bg-pink-500', icon: <GIVEIcon /> },
         ];
 
         const formatCurrency = (v) => new Intl.NumberFormat('vi-VN').format(v) + ' ₫';
 
+        // --- MAIN APP ---
         function App() {
             const [history, setHistory] = useState(() => {
                 const saved = localStorage.getItem('financialData_merged');
@@ -50,7 +49,6 @@
             const [userName, setUserName] = useState(() => localStorage.getItem('userName_merged') || 'Bạn');
             const [selectedMonth, setSelectedMonth] = useState(history[history.length - 1].month);
             const [isAddMonthOpen, setIsAddMonthOpen] = useState(false);
-            const [newMonthValue, setNewMonthValue] = useState(new Date().toISOString().slice(0, 7));
 
             useEffect(() => {
                 localStorage.setItem('financialData_merged', JSON.stringify(history));
@@ -59,7 +57,7 @@
 
             const currentRecord = history.find(r => r.month === selectedMonth) || history[0];
 
-            const balances = useMemo(() => {
+            const balancesByMonth = useMemo(() => {
                 const res = {};
                 const cumul = {};
                 [...history].sort((a, b) => a.month.localeCompare(b.month)).forEach(rec => {
@@ -68,50 +66,95 @@
                         const added = (totalInc * j.percentage) / 100;
                         const spent = rec.expenses.filter(e => e.jarId === j.id).reduce((s, e) => s + e.amount, 0);
                         cumul[j.id] = (cumul[j.id] || 0) + added - spent;
-                        return { ...j, amount: cumul[j.id], added, spent };
+                        return { ...j, amount: cumul[j.id], amountAddedThisMonth: added, amountSpentThisMonth: spent };
                     });
                 });
                 return res;
             }, [history]);
 
-            const currentBalances = balances[selectedMonth] || [];
+            const currentBalances = balancesByMonth[selectedMonth] || [];
 
-            const addIncome = () => {
-                const amount = prompt("Nhập số tiền thu nhập:");
-                const desc = prompt("Mô tả nguồn thu:");
+            const addTransaction = (type, jarId = null) => {
+                const title = type === 'income' ? 'Thêm thu nhập' : 'Thêm chi tiêu';
+                const amount = prompt(`Nhập số tiền ${type === 'income' ? 'thu' : 'chi'}:`);
+                const desc = prompt("Mô tả:");
                 if (amount && desc) {
-                    setHistory(old => old.map(r => r.month === selectedMonth ? 
-                        { ...r, incomes: [...r.incomes, { id: Date.now().toString(), amount: parseInt(amount), description: desc }] } : r));
-                }
-            };
-
-            const addExpense = (jarId) => {
-                const amount = prompt("Nhập số tiền chi tiêu:");
-                const desc = prompt("Mô tả chi tiêu:");
-                if (amount && desc) {
-                    setHistory(old => old.map(r => r.month === selectedMonth ? 
-                        { ...r, expenses: [...r.expenses, { id: Date.now().toString(), jarId, amount: parseInt(amount), description: desc }] } : r));
+                    setHistory(old => old.map(r => r.month === selectedMonth ? {
+                        ...r,
+                        [type === 'income' ? 'incomes' : 'expenses']: [
+                            ...r[type === 'income' ? 'incomes' : 'expenses'],
+                            { id: Date.now().toString(), amount: parseInt(amount), description: desc, jarId }
+                        ]
+                    } : r));
                 }
             };
 
             return (
                 <div className="max-w-md mx-auto min-h-screen bg-gray-50 pb-10">
-                    <header className="p-6 bg-white shadow-sm flex justify-between items-center">
-                        <input value={userName} onChange={e => setUserName(e.target.value)} className="text-xl font-bold text-blue-600 bg-transparent focus:outline-none w-1/2" />
-                        <div className="text-right">
-                            <button onClick={() => setIsAddMonthOpen(true)} className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold">Tháng {selectedMonth}</button>
+                    <header className="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10">
+                        <div className="flex items-center gap-1">
+                            <span className="text-gray-400 text-sm">Của</span>
+                            <input value={userName} onChange={e => setUserName(e.target.value)} className="font-bold text-blue-600 focus:outline-none bg-transparent" />
                         </div>
+                        <button onClick={() => setIsAddMonthOpen(true)} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-sm font-bold">Tháng {selectedMonth} ▾</button>
                     </header>
 
-                    <main className="p-4 space-y-6">
-                        <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-3xl text-white shadow-xl">
-                            <p className="text-blue-100 text-sm">Tổng thu nhập tháng</p>
-                            <h2 className="text-3xl font-black mt-1">{formatCurrency(currentRecord.incomes.reduce((s, i) => s + i.amount, 0))}</h2>
-                            <button onClick={addIncome} className="mt-4 w-full bg-white/20 hover:bg-white/30 py-2 rounded-xl text-sm font-bold transition">+ Thêm thu nhập</button>
+                    <main className="p-4 space-y-4">
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                            <h3 className="text-gray-400 text-xs uppercase font-bold mb-1">Tổng thu nhập tháng</h3>
+                            <div className="text-2xl font-black text-gray-800 tabular-nums">
+                                {formatCurrency(currentRecord.incomes.reduce((s, i) => s + i.amount, 0))}
+                            </div>
+                            <button onClick={() => addTransaction('income')} className="mt-4 w-full py-2 bg-blue-600 text-white rounded-xl font-bold text-sm">+ Thêm thu nhập</button>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4">
+                        <div className="grid grid-cols-1 gap-3">
                             {currentBalances.map(jar => (
-                                <div key={jar.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex gap
+                                <div key={jar.id} className="bg-white p-4 rounded-2xl flex flex-col shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex gap-3">
+                                            <div className={`${jar.color} text-white p-2 rounded-xl`}>{jar.icon}</div>
+                                            <div>
+                                                <h4 className="font-bold text-sm text-gray-800">{jar.name}</h4>
+                                                <p className="text-[10px] text-gray-400">{jar.percentage}% • {jar.description}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold text-blue-600 tabular-nums">{formatCurrency(jar.amount)}</div>
+                                            <div className="text-[10px] text-red-400">-{formatCurrency(jar.amountSpentThisMonth)}</div>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => addTransaction('expense', jar.id)} className="w-full py-1.5 bg-gray-50 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-wider">Ghi chi tiêu</button>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+
+                    {/* Simple Modal for Month Selection */}
+                    {isAddMonthOpen && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                            <div className="bg-white p-6 rounded-3xl w-full shadow-2xl animate-in zoom-in duration-200">
+                                <h3 className="font-bold mb-4">Chọn hoặc thêm tháng</h3>
+                                <input type="month" className="w-full p-3 border-2 rounded-xl mb-4" onChange={(e) => {
+                                    const m = e.target.value;
+                                    if(m) {
+                                        if(!history.find(h => h.month === m)) {
+                                            setHistory(old => [...old, { month: m, incomes: [], jars: DEFAULT_JARS, expenses: [] }].sort((a,b) => a.month.localeCompare(b.month)));
+                                        }
+                                        setSelectedMonth(m);
+                                        setIsAddMonthOpen(false);
+                                    }
+                                }} />
+                                <button onClick={() => setIsAddMonthOpen(false)} className="w-full py-2 text-gray-400 font-bold">Đóng</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
