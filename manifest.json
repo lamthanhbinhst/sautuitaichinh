@@ -1,0 +1,27 @@
+
+{
+  "short_name": "Sáu Túi",
+  "name": "Sáu Túi Tài Chính",
+  "description": "Quản lý tài chính cá nhân thông minh theo phương pháp 6 chiếc hũ.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/192/2850/2850341.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2850/2850341.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "categories": ["finance", "productivity"]
+}
