@@ -3,25 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sáu Túi Tài Chính</title>
+    <title>6 Túi Tài Chính</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .tabular-nums { font-variant-numeric: tabular-nums; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
     <div id="root"></div>
-
     <script type="text/babel">
-        const { useState, useMemo, useEffect, useCallback } = React;
+        const { useState, useMemo, useEffect } = React;
 
-        // --- ICONS ---
         const NECIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm3-4H7v-2h8v2zm0-4H7V7h8v2z"/></svg>;
         const FFAIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>;
         const LTSIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12.16 4.3c-.12 0-.23.02-.34.05C11.6 4.33 11.39 4.3 11.16 4.3 8.94 4.3 7.12 6.1 7 8.31 5.82 8.68 4.91 9.75 4.91 11c0 1.21.9 2.2 2.09 2.2h10c1.38 0 2.5-1.12 2.5-2.5 0-1.21-.88-2.22-2.06-2.45C17.38 6.1 15.02 4.3 12.16 4.3zM13 10h-2V8h2v10z"/></svg>;
@@ -30,17 +26,14 @@
         const GIVEIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>;
 
         const DEFAULT_JARS = [
-            { id: 'NEC', name: 'Thiết yếu', percentage: 55, description: 'Ăn uống, nhà ở', color: 'bg-blue-500', icon: <NECIcon /> },
-            { id: 'FFA', name: 'Tự do tài chính', percentage: 10, description: 'Đầu tư', color: 'bg-green-500', icon: <FFAIcon /> },
-            { id: 'LTS', name: 'Tiết kiệm', percentage: 10, description: 'Mục tiêu lớn', color: 'bg-purple-500', icon: <LTSIcon /> },
-            { id: 'EDU', name: 'Giáo dục', percentage: 10, description: 'Phát triển bản thân', color: 'bg-orange-500', icon: <EDUIcon /> },
-            { id: 'PLAY', name: 'Hưởng thụ', percentage: 10, description: 'Giải trí', color: 'bg-red-500', icon: <PLAYIcon /> },
+            { id: 'NEC', name: 'Thiết yếu', percentage: 55, description: 'Ăn uống, tiền nhà', color: 'bg-blue-500', icon: <NECIcon /> },
+            { id: 'FFA', name: 'Tự do tài chính', percentage: 10, description: 'Đầu tư sinh lời', color: 'bg-green-500', icon: <FFAIcon /> },
+            { id: 'LTS', name: 'Tiết kiệm', percentage: 10, description: 'Mua sắm lớn', color: 'bg-purple-500', icon: <LTSIcon /> },
+            { id: 'EDU', name: 'Giáo dục', percentage: 10, description: 'Học tập phát triển', color: 'bg-orange-500', icon: <EDUIcon /> },
+            { id: 'PLAY', name: 'Hưởng thụ', percentage: 10, description: 'Ăn chơi giải trí', color: 'bg-red-500', icon: <PLAYIcon /> },
             { id: 'GIVE', name: 'Cho đi', percentage: 5, description: 'Từ thiện, giúp đỡ', color: 'bg-pink-500', icon: <GIVEIcon /> },
         ];
 
-        const formatCurrency = (v) => new Intl.NumberFormat('vi-VN').format(v) + ' ₫';
-
-        // --- MAIN APP ---
         function App() {
             const [history, setHistory] = useState(() => {
                 const saved = localStorage.getItem('financialData_merged');
@@ -57,104 +50,100 @@
 
             const currentRecord = history.find(r => r.month === selectedMonth) || history[0];
 
-            const balancesByMonth = useMemo(() => {
-                const res = {};
-                const cumul = {};
+            const balances = useMemo(() => {
+                const res = {}; const cumul = {};
                 [...history].sort((a, b) => a.month.localeCompare(b.month)).forEach(rec => {
                     const totalInc = rec.incomes.reduce((s, i) => s + i.amount, 0);
                     res[rec.month] = rec.jars.map(j => {
                         const added = (totalInc * j.percentage) / 100;
                         const spent = rec.expenses.filter(e => e.jarId === j.id).reduce((s, e) => s + e.amount, 0);
                         cumul[j.id] = (cumul[j.id] || 0) + added - spent;
-                        return { ...j, amount: cumul[j.id], amountAddedThisMonth: added, amountSpentThisMonth: spent };
+                        return { ...j, amount: cumul[j.id], spent };
                     });
                 });
                 return res;
             }, [history]);
 
-            const currentBalances = balancesByMonth[selectedMonth] || [];
+            const currentBalances = balances[selectedMonth] || [];
 
             const addTransaction = (type, jarId = null) => {
-                const title = type === 'income' ? 'Thêm thu nhập' : 'Thêm chi tiêu';
-                const amount = prompt(`Nhập số tiền ${type === 'income' ? 'thu' : 'chi'}:`);
+                const amount = prompt("Nhập số tiền:");
                 const desc = prompt("Mô tả:");
                 if (amount && desc) {
                     setHistory(old => old.map(r => r.month === selectedMonth ? {
-                        ...r,
-                        [type === 'income' ? 'incomes' : 'expenses']: [
-                            ...r[type === 'income' ? 'incomes' : 'expenses'],
-                            { id: Date.now().toString(), amount: parseInt(amount), description: desc, jarId }
-                        ]
+                        ...r, [type === 'income' ? 'incomes' : 'expenses']: [...r[type === 'income' ? 'incomes' : 'expenses'], 
+                        { id: Date.now().toString(), amount: parseInt(amount), description: desc, jarId }]
                     } : r));
                 }
             };
-const exportToCSV = () => {
-  let csvContent = "data:text/csv;charset=utf-8," + "\ufeff" + "Thang,Loai,Hang muc,Mo ta,So tien\n";
-  history.forEach(rec => {
-    rec.incomes.forEach(i => { csvContent += `${rec.month},Thu nhập,N/A,${i.description},${i.amount}\n`; });
-    rec.expenses.forEach(e => {
-      const jarName = rec.jars.find(j => j.id === e.jarId)?.name || "Túi";
-      csvContent += `${rec.month},Chi tiêu,${jarName},${e.description},${e.amount}\n`;
-    });
-  });
-  const link = document.createElement("a");
-  link.setAttribute("href", encodeURI(csvContent));
-  link.setAttribute("download", "Bao-cao-tai-chinh.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+
+            const exportToCSV = () => {
+                let csvContent = "data:text/csv;charset=utf-8,\ufeffThang,Loai,Hang muc,Mo ta,So tien\n";
+                history.forEach(rec => {
+                    rec.incomes.forEach(i => { csvContent += `${rec.month},Thu nhập,N/A,${i.description},${i.amount}\n`; });
+                    rec.expenses.forEach(e => {
+                        const jarName = rec.jars.find(j => j.id === e.jarId)?.name || "Túi";
+                        csvContent += `${rec.month},Chi tiêu,${jarName},${e.description},${e.amount}\n`;
+                    });
+                });
+                const link = document.createElement("a");
+                link.setAttribute("href", encodeURI(csvContent));
+                link.setAttribute("download", "Bao-cao-6-Tui.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
             return (
-                <div className="max-w-md mx-auto min-h-screen bg-gray-50 pb-10">
-                    <header className="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10">
-                        <div className="flex items-center gap-1">
-                            <span className="text-gray-400 text-sm">Của</span>
-                            <input value={userName} onChange={e => setUserName(e.target.value)} className="font-bold text-blue-600 focus:outline-none bg-transparent" />
-                        </div>
+                <div className="max-w-md mx-auto min-h-screen pb-10">
+                    <header className="p-4 bg-white shadow-sm flex justify-between items-center sticky top-0 z-10">
+                        <input value={userName} onChange={e => setUserName(e.target.value)} className="font-bold text-blue-600 focus:outline-none w-1/2" />
                         <button onClick={() => setIsAddMonthOpen(true)} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-sm font-bold">Tháng {selectedMonth} ▾</button>
                     </header>
-<div className="px-4 pt-2">
-  <button onClick={exportToCSV} className="w-full py-2 border border-dashed border-blue-200 text-blue-400 rounded-xl text-[10px] font-bold uppercase tracking-widest active:bg-blue-50 transition-colors">
-    ⬇ Sao lưu dữ liệu (CSV)
-  </button>
-</div>
+
+                    <div className="px-4 py-2">
+                        <button onClick={exportToCSV} className="w-full py-2 bg-white border border-dashed border-blue-300 text-blue-500 rounded-xl text-[10px] font-bold uppercase tracking-widest active:bg-blue-50 shadow-sm">
+                            ⬇ Xuất bản sao lưu (CSV)
+                        </button>
+                    </div>
+
                     <main className="p-4 space-y-4">
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                            <h3 className="text-gray-400 text-xs uppercase font-bold mb-1">Tổng thu nhập tháng</h3>
-                            <div className="text-2xl font-black text-gray-800 tabular-nums">
-                                {formatCurrency(currentRecord.incomes.reduce((s, i) => s + i.amount, 0))}
-                            </div>
-                            <button onClick={() => addTransaction('income')} className="mt-4 w-full py-2 bg-blue-600 text-white rounded-xl font-bold text-sm">+ Thêm thu nhập</button>
+                        <div className="bg-blue-600 p-6 rounded-2xl text-white shadow-lg">
+                            <p className="text-blue-100 text-sm font-medium">Thu nhập tháng {selectedMonth}</p>
+                            <h2 className="text-3xl font-black mt-1">
+                                {new Intl.NumberFormat('vi-VN').format(currentRecord.incomes.reduce((s, i) => s + i.amount, 0))} ₫
+                            </h2>
+                            <button onClick={() => addTransaction('income')} className="mt-4 w-full bg-white/20 hover:bg-white/30 py-2 rounded-xl text-sm font-bold transition">+ Thêm thu nhập</button>
                         </div>
 
                         <div className="grid grid-cols-1 gap-3">
                             {currentBalances.map(jar => (
-                                <div key={jar.id} className="bg-white p-4 rounded-2xl flex flex-col shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start mb-2">
+                                <div key={jar.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-3">
                                         <div className="flex gap-3">
                                             <div className={`${jar.color} text-white p-2 rounded-xl`}>{jar.icon}</div>
                                             <div>
-                                                <h4 className="font-bold text-sm text-gray-800">{jar.name}</h4>
+                                                <h4 className="font-bold text-sm">{jar.name}</h4>
                                                 <p className="text-[10px] text-gray-400">{jar.percentage}% • {jar.description}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-bold text-blue-600 tabular-nums">{formatCurrency(jar.amount)}</div>
-                                            <div className="text-[10px] text-red-400">-{formatCurrency(jar.amountSpentThisMonth)}</div>
+                                            <div className="font-bold text-blue-600">
+                                                {new Intl.NumberFormat('vi-VN').format(jar.amount)} ₫
+                                            </div>
                                         </div>
                                     </div>
-                                    <button onClick={() => addTransaction('expense', jar.id)} className="w-full py-1.5 bg-gray-50 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-wider">Ghi chi tiêu</button>
+                                    <button onClick={() => addTransaction('expense', jar.id)} className="w-full py-1.5 bg-gray-50 text-gray-400 rounded-lg text-[10px] font-bold uppercase hover:bg-gray-100">Ghi chi tiêu</button>
                                 </div>
                             ))}
                         </div>
                     </main>
 
-                    {/* Simple Modal for Month Selection */}
                     {isAddMonthOpen && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-                            <div className="bg-white p-6 rounded-3xl w-full shadow-2xl animate-in zoom-in duration-200">
-                                <h3 className="font-bold mb-4">Chọn hoặc thêm tháng</h3>
-                                <input type="month" className="w-full p-3 border-2 rounded-xl mb-4" onChange={(e) => {
+                        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
+                            <div className="bg-white p-6 rounded-3xl w-full shadow-2xl">
+                                <h3 className="font-bold mb-4">Chọn/Thêm tháng</h3>
+                                <input type="month" className="w-full p-3 border rounded-xl mb-4" onChange={(e) => {
                                     const m = e.target.value;
                                     if(m) {
                                         if(!history.find(h => h.month === m)) {
@@ -171,29 +160,7 @@ const exportToCSV = () => {
                 </div>
             );
         }
-const exportToCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8," 
-        + "\ufeff" // Giúp Excel hiểu tiếng Việt có dấu
-        + "Thang,Loai,Hang muc,Mo ta,So tien\n";
-    
-    history.forEach(rec => {
-        rec.incomes.forEach(i => {
-            csvContent += `${rec.month},Thu nhập,N/A,${i.description},${i.amount}\n`;
-        });
-        rec.expenses.forEach(e => {
-            const jarName = rec.jars.find(j => j.id === e.jarId)?.name || "Túi";
-            csvContent += `${rec.month},Chi tiêu,${jarName},${e.description},${e.amount}\n`;
-        });
-    });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Bao-cao-6-Tui.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
