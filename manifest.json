@@ -1,7 +1,7 @@
-{
-  "name": "Sáu Túi Tài Chính",
+ {
+  "name": "6 Túi Tài Chính",
   "short_name": "6 Túi",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
@@ -10,7 +10,7 @@
       "src": "https://cdn-icons-png.flaticon.com/512/2489/2489756.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
