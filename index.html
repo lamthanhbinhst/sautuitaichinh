@@ -97,7 +97,7 @@
                     <header className="p-4 bg-white shadow-sm flex justify-between items-center sticky top-0 z-10">
                         <div className="flex items-center gap-1">
                             <span className="text-gray-400 text-sm">Của</span>
-                            <input value={userName} onChange={e => setUserName(e.target.value)} className="font-bold text-blue-600 focus:outline-none w-24" />
+                            <input value={userName} onChange={e => setUserName(e.target.value)} className="font-bold text-blue-600 focus:outline-none w-24 bg-transparent" />
                         </div>
                         <button onClick={() => setIsAddMonthOpen(true)} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-sm font-bold">Tháng {selectedMonth} ▾</button>
                     </header>
