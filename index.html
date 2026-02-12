@@ -13,7 +13,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; margin: 0; }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -50,11 +50,11 @@
                 });
             }, [data]);
             return (
-                <div className="relative w-44 h-44 mx-auto my-4">
+                <div className="relative w-40 h-40 mx-auto my-4">
                     <canvas ref={chartRef}></canvas>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Số dư</span>
-                        <span className="text-lg font-black text-gray-800 tracking-tighter">Tổng kết</span>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Số dư</span>
+                        <span className="text-lg font-black text-gray-800">Tổng</span>
                     </div>
                 </div>
             );
@@ -62,7 +62,7 @@
 
         function App() {
             const [history, setHistory] = useState(() => {
-                const saved = localStorage.getItem('financialData_v5');
+                const saved = localStorage.getItem('financialData_v7');
                 return saved ? JSON.parse(saved) : [{ 
                     month: new Date().toISOString().slice(0, 7), 
                     incomes: [], 
@@ -76,7 +76,7 @@
             const [tempRatios, setTempRatios] = useState({});
 
             useEffect(() => {
-                localStorage.setItem('financialData_v5', JSON.stringify(history));
+                localStorage.setItem('financialData_v7', JSON.stringify(history));
             }, [history]);
 
             const currentRecord = history.find(r => r.month === selectedMonth) || history[0];
@@ -104,36 +104,48 @@
 
             const addTransaction = (type, jarId = null) => {
                 const amount = prompt("Nhập số tiền (đ):");
-                const desc = prompt("Mô tả:");
+                const desc = prompt("Mô tả khoản này (Ví dụ: Lương, Mua cơm, Tiền điện...):");
                 if (amount && !isNaN(amount) && desc) {
                     setHistory(old => old.map(r => r.month === selectedMonth ? {
                         ...r, [type === 'income' ? 'incomes' : 'expenses']: [...r[type === 'income' ? 'incomes' : 'expenses'], 
-                        { id: Date.now().toString(), amount: parseInt(amount), description: desc, jarId }]
+                        { id: Date.now().toString(), amount: parseInt(amount), description: desc, jarId, date: new Date().toLocaleDateString('vi-VN') }]
                     } : r));
                 }
             };
 
+            const deleteTransaction = (type, id) => {
+                if(confirm("Bạn muốn xóa khoản này?")) {
+                    setHistory(old => old.map(r => r.month === selectedMonth ? {
+                        ...r, [type]: r[type].filter(t => t.id !== id)
+                    } : r));
+                }
+            };
+
+            const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val) + " ₫";
+
             return (
-                <div className="max-w-md mx-auto min-h-screen bg-gray-50 pb-20">
+                <div className="max-w-md mx-auto min-h-screen bg-gray-50 pb-10">
                     <header className="p-4 bg-white shadow-sm flex justify-between items-center sticky top-0 z-40">
-                        <h1 className="font-black text-xl text-gray-800 italic">6 Túi<span className="text-blue-600">.</span></h1>
+                        <h1 className="font-black text-xl text-gray-800 italic">6 TÚI<span className="text-blue-600">.</span></h1>
                         <div className="flex gap-2">
                              <button onClick={() => { setTempRatios(currentRecord.ratios); setIsRatioEditOpen(true); }} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-xl">⚙️</button>
-                             <button onClick={() => setIsAddMonthOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold">{selectedMonth}</button>
+                             <button onClick={() => setIsAddMonthOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-blue-100">{selectedMonth}</button>
                         </div>
                     </header>
 
                     <main className="px-4 space-y-4 pt-2">
                         <PieChart data={currentSummary.map(s => ({...s, amount: s.closing}))} />
                         
-                        <div className="bg-white p-6 rounded-[2rem] shadow-sm text-center border border-gray-100">
-                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Thu nhập tháng</p>
+                        {/* Thu Nhập */}
+                        <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 text-center">
+                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">Thu nhập tháng {selectedMonth}</p>
                             <div className="text-3xl font-black text-blue-600 mb-4 tracking-tighter">
-                                {new Intl.NumberFormat('vi-VN').format(currentRecord.incomes.reduce((s, i) => s + i.amount, 0))} ₫
+                                {formatMoney(currentRecord.incomes.reduce((s, i) => s + i.amount, 0))}
                             </div>
-                            <button onClick={() => addTransaction('income')} className="w-full py-3.5 bg-gray-900 text-white rounded-2xl font-bold">+ Thêm thu nhập</button>
+                            <button onClick={() => addTransaction('income')} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold text-sm shadow-xl">+ THÊM THU NHẬP</button>
                         </div>
 
+                        {/* Các Túi */}
                         <div className="grid grid-cols-1 gap-3">
                             {currentSummary.map(jar => (
                                 <div key={jar.id} className="bg-white p-4 rounded-[1.5rem] shadow-sm border border-gray-100">
@@ -141,45 +153,107 @@
                                         <div className="flex gap-3">
                                             <div className="text-2xl">{jar.icon}</div>
                                             <div>
-                                                <h4 className="font-bold text-sm">{jar.name}</h4>
-                                                <p className="text-[10px] text-gray-400 font-bold">{currentRecord.ratios?.[jar.id] || 0}%</p>
+                                                <h4 className="font-bold text-sm text-gray-800">{jar.name}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase">{currentRecord.ratios?.[jar.id] || 0}% tỉ lệ</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-black text-gray-800 text-lg">{new Intl.NumberFormat('vi-VN').format(jar.closing)} ₫</div>
-                                            <div className="text-[10px] text-red-400 font-bold italic">Chi: {new Intl.NumberFormat('vi-VN').format(jar.spent)} ₫</div>
+                                            <div className="font-black text-gray-800 text-lg">{formatMoney(jar.closing)}</div>
+                                            <div className="text-[10px] text-red-400 font-bold italic">Đã chi: {formatMoney(jar.spent)}</div>
                                         </div>
                                     </div>
-                                    <button onClick={() => addTransaction('expense', jar.id)} className="mt-3 w-full py-2 bg-gray-50 text-gray-400 rounded-xl text-[10px] font-bold uppercase tracking-widest">Ghi chi tiêu</button>
+                                    <button onClick={() => addTransaction('expense', jar.id)} className="mt-3 w-full py-2 bg-gray-50 text-gray-400 rounded-xl text-[10px] font-bold uppercase tracking-widest">Ghi chi tiêu túi này</button>
                                 </div>
                             ))}
                         </div>
 
-                        {/* BÁO CÁO TỔNG HỢP */}
-                        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mt-8 mb-10">
-                            <div className="bg-gray-900 p-4 text-white font-bold text-xs uppercase tracking-widest">Báo cáo tổng hợp</div>
+                        {/* NHẬT KÝ CHI TIẾT KHOẢN THU/CHI */}
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mt-6">
+                            <div className="bg-gray-800 p-4 text-white">
+                                <h3 className="font-bold text-xs uppercase tracking-widest">Danh sách Thu & Chi chi tiết</h3>
+                                <p className="text-[9px] text-gray-400 mt-1 uppercase italic">Bạn đã tiêu những gì trong tháng {selectedMonth}?</p>
+                            </div>
+                            <div className="max-h-[500px] overflow-y-auto hide-scrollbar">
+                                {[...currentRecord.incomes, ...currentRecord.expenses].length === 0 ? (
+                                    <div className="p-10 text-center">
+                                        <div className="text-3xl mb-2">📋</div>
+                                        <p className="text-gray-400 text-xs italic">Chưa có giao dịch nào được ghi lại.</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
+                                        {/* Hiển thị các khoản THU */}
+                                        {currentRecord.incomes.map(i => (
+                                            <div key={i.id} className="p-4 flex justify-between items-center bg-green-50/30">
+                                                <div className="flex gap-3 items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs font-bold">THU</div>
+                                                    <div>
+                                                        <div className="font-bold text-sm text-gray-800">{i.description}</div>
+                                                        <div className="text-[10px] text-gray-400 font-medium">📅 {i.date}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="text-right font-black text-green-600">{formatMoney(i.amount)}</div>
+                                                    <button onClick={() => deleteTransaction('incomes', i.id)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 font-bold text-lg">×</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {/* Hiển thị các khoản CHI */}
+                                        {currentRecord.expenses.map(e => (
+                                            <div key={e.id} className="p-4 flex justify-between items-center bg-white hover:bg-red-50/20">
+                                                <div className="flex gap-3 items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 text-xs font-bold">CHI</div>
+                                                    <div>
+                                                        <div className="font-bold text-sm text-gray-800">{e.description}</div>
+                                                        <div className="text-[10px] text-gray-400 font-medium italic">
+                                                            👜 {JAR_CONFIG.find(j=>j.id===e.jarId)?.name} • 📅 {e.date}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="text-right font-black text-red-500">-{formatMoney(e.amount)}</div>
+                                                    <button onClick={() => deleteTransaction('expenses', e.id)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 font-bold text-lg">×</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* BẢNG TỔNG HỢP CUỐI CÙNG */}
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-10">
+                            <div className="bg-blue-600 p-4 text-white font-bold text-xs uppercase tracking-widest text-center">Bảng đối soát túi tiền</div>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-[10px] text-left">
-                                    <thead className="bg-gray-50 text-gray-400 font-bold uppercase">
+                                <table className="w-full text-[10px] text-left border-collapse">
+                                    <thead className="bg-gray-50 text-gray-400 font-black uppercase border-b border-gray-100">
                                         <tr>
                                             <th className="p-3">Túi</th>
                                             <th className="p-3 text-right">Đầu</th>
-                                            <th className="p-3 text-right">Nhập</th>
-                                            <th className="p-3 text-right">Chi</th>
-                                            <th className="p-3 text-right text-blue-600">Cuối</th>
+                                            <th className="p-3 text-right text-green-500">Nhập</th>
+                                            <th className="p-3 text-right text-red-400">Chi</th>
+                                            <th className="p-3 text-right text-blue-600 font-black">Cuối</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="text-gray-700 font-medium">
                                         {currentSummary.map(jar => (
                                             <tr key={jar.id} className="border-b border-gray-50">
                                                 <td className="p-3 font-bold">{jar.name}</td>
                                                 <td className="p-3 text-right text-gray-400">{new Intl.NumberFormat('vi-VN').format(jar.opening)}</td>
-                                                <td className="p-3 text-right text-green-500">+{new Intl.NumberFormat('vi-VN').format(jar.added)}</td>
+                                                <td className="p-3 text-right text-green-600">+{new Intl.NumberFormat('vi-VN').format(jar.added)}</td>
                                                 <td className="p-3 text-right text-red-500">-{new Intl.NumberFormat('vi-VN').format(jar.spent)}</td>
-                                                <td className="p-3 text-right font-black">{new Intl.NumberFormat('vi-VN').format(jar.closing)}</td>
+                                                <td className="p-3 text-right font-black text-blue-800">{new Intl.NumberFormat('vi-VN').format(jar.closing)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
+                                    <tfoot className="bg-blue-50 font-black text-blue-900 border-t-2 border-blue-100">
+                                        <tr>
+                                            <td className="p-3 uppercase">TỔNG CỘNG</td>
+                                            <td className="p-3 text-right">{new Intl.NumberFormat('vi-VN').format(currentSummary.reduce((s,j)=>s+j.opening,0))}</td>
+                                            <td className="p-3 text-right text-green-600">{new Intl.NumberFormat('vi-VN').format(currentSummary.reduce((s,j)=>s+j.added,0))}</td>
+                                            <td className="p-3 text-right text-red-600">{new Intl.NumberFormat('vi-VN').format(currentSummary.reduce((s,j)=>s+j.spent,0))}</td>
+                                            <td className="p-3 text-right">{new Intl.NumberFormat('vi-VN').format(currentSummary.reduce((s,j)=>s+j.closing,0))}</td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -189,22 +263,22 @@
                     {isRatioEditOpen && (
                         <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
                             <div className="bg-white p-6 rounded-[2.5rem] w-full max-w-sm shadow-2xl">
-                                <h3 className="text-xl font-black mb-6">Thiết lập tỷ lệ (%)</h3>
-                                <div className="space-y-3 mb-6">
+                                <h3 className="text-xl font-black mb-6 text-gray-800 tracking-tight italic">Thiết lập tỷ lệ (%)</h3>
+                                <div className="space-y-3 mb-8">
                                     {JAR_CONFIG.map(jar => (
-                                        <div key={jar.id} className="flex items-center justify-between p-2">
-                                            <span className="text-sm font-bold text-gray-500">{jar.name}</span>
-                                            <input type="number" value={tempRatios[jar.id] || 0} onChange={e => setTempRatios({...tempRatios, [jar.id]: parseInt(e.target.value || 0)})} className="w-16 p-2 text-center font-black text-blue-600 bg-gray-100 rounded-xl outline-none" />
+                                        <div key={jar.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-2xl">
+                                            <span className="text-sm font-bold text-gray-600">{jar.name}</span>
+                                            <input type="number" value={tempRatios[jar.id] || 0} onChange={e => setTempRatios({...tempRatios, [jar.id]: parseInt(e.target.value || 0)})} className="w-16 p-2 text-center font-black text-blue-600 bg-white border border-gray-100 rounded-xl outline-none focus:ring-2 ring-blue-500" />
                                         </div>
                                     ))}
                                 </div>
                                 <button onClick={() => {
                                     const total = Object.values(tempRatios).reduce((s, v) => s + v, 0);
-                                    if (total !== 100) return alert(`Tổng là ${total}%. Phải bằng 100%!`);
+                                    if (total !== 100) return alert(`Tổng đang là ${total}%. Phải đúng 100% để lưu!`);
                                     setHistory(old => old.map(r => r.month === selectedMonth ? { ...r, ratios: tempRatios } : r));
                                     setIsRatioEditOpen(false);
-                                }} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg">Lưu lại</button>
-                                <button onClick={() => setIsRatioEditOpen(false)} className="w-full py-2 text-gray-400 font-bold mt-2">Hủy</button>
+                                }} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-200">Xác nhận Lưu lại</button>
+                                <button onClick={() => setIsRatioEditOpen(false)} className="w-full py-2 text-gray-400 font-bold mt-2 text-xs">Hủy bỏ</button>
                             </div>
                         </div>
                     )}
@@ -213,7 +287,7 @@
                     {isAddMonthOpen && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
                             <div className="bg-white p-8 rounded-[2rem] w-full shadow-2xl text-center">
-                                <h3 className="font-black mb-6">Chọn tháng</h3>
+                                <h3 className="font-black mb-6 text-gray-800 uppercase text-sm tracking-widest">Chọn tháng làm việc</h3>
                                 <input type="month" className="w-full p-4 bg-gray-100 rounded-2xl mb-6 font-black text-blue-600 outline-none" onChange={(e) => {
                                     const m = e.target.value;
                                     if(m) {
@@ -223,7 +297,7 @@
                                         setSelectedMonth(m); setIsAddMonthOpen(false);
                                     }
                                 }} />
-                                <button onClick={() => setIsAddMonthOpen(false)} className="py-2 text-gray-400 font-bold font-sm">Đóng</button>
+                                <button onClick={() => setIsAddMonthOpen(false)} className="py-2 text-gray-400 font-bold text-xs uppercase">Đóng</button>
                             </div>
                         </div>
                     )}
