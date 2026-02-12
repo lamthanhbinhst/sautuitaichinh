@@ -13,6 +13,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; margin: 0; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body>
@@ -20,20 +21,13 @@
     <script type="text/babel">
         const { useState, useMemo, useEffect, useRef } = React;
 
-        const NECIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm3-4H7v-2h8v2zm0-4H7V7h8v2z"/></svg>;
-        const FFAIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>;
-        const LTSIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12.16 4.3c-.12 0-.23.02-.34.05C11.6 4.33 11.39 4.3 11.16 4.3 8.94 4.3 7.12 6.1 7 8.31 5.82 8.68 4.91 9.75 4.91 11c0 1.21.9 2.2 2.09 2.2h10c1.38 0 2.5-1.12 2.5-2.5 0-1.21-.88-2.22-2.06-2.45C17.38 6.1 15.02 4.3 12.16 4.3zM13 10h-2V8h2v10z"/></svg>;
-        const EDUIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 1 9l4 2.18v6.32L1 21l11 4 11-4-4-2.18v-6.32L23 9 12 3z"/></svg>;
-        const PLAYIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M20.21 17.21c-.58.6-.96 1.38-1.08 2.29H4.88c-.12-.91-.5-1.69-1.08-2.29C2.61 16.03 2 14.56 2 13V8c0-1.65 1.35-3 3-3h14c1.65 0 3 1.35 3 3v5c0 1.56-.61 3.03-1.79 4.21z"/></svg>;
-        const GIVEIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>;
-
         const JAR_CONFIG = [
-            { id: 'NEC', name: 'Thiết yếu', color: 'bg-blue-500', icon: <NECIcon />, description: 'Ăn uống, nhà ở' },
-            { id: 'FFA', name: 'Tự do tài chính', color: 'bg-green-500', icon: <FFAIcon />, description: 'Đầu tư' },
-            { id: 'LTS', name: 'Tiết kiệm', color: 'bg-purple-500', icon: <LTSIcon />, description: 'Mục tiêu lớn' },
-            { id: 'EDU', name: 'Giáo dục', color: 'bg-orange-500', icon: <EDUIcon />, description: 'Phát triển bản thân' },
-            { id: 'PLAY', name: 'Hưởng thụ', color: 'bg-red-500', icon: <PLAYIcon />, description: 'Giải trí' },
-            { id: 'GIVE', name: 'Cho đi', color: 'bg-pink-500', icon: <GIVEIcon />, description: 'Từ thiện, giúp đỡ' },
+            { id: 'NEC', name: 'Thiết yếu', color: 'bg-blue-500', icon: '🏠', description: 'Ăn uống, nhà ở' },
+            { id: 'FFA', name: 'Tự do tài chính', color: 'bg-green-500', icon: '📈', description: 'Đầu tư' },
+            { id: 'LTS', name: 'Tiết kiệm', color: 'bg-purple-500', icon: '💰', description: 'Mục tiêu lớn' },
+            { id: 'EDU', name: 'Giáo dục', color: 'bg-orange-500', icon: '🎓', description: 'Phát triển bản thân' },
+            { id: 'PLAY', name: 'Hưởng thụ', color: 'bg-red-500', icon: '🏖️', description: 'Giải trí' },
+            { id: 'GIVE', name: 'Cho đi', color: 'bg-pink-500', icon: '❤️', description: 'Từ thiện, giúp đỡ' },
         ];
 
         const PieChart = ({ data }) => {
@@ -56,11 +50,11 @@
                 });
             }, [data]);
             return (
-                <div className="relative w-48 h-48 mx-auto my-4">
+                <div className="relative w-44 h-44 mx-auto my-4">
                     <canvas ref={chartRef}></canvas>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Số dư</span>
-                        <span className="text-xl font-black text-gray-800">6 Túi</span>
+                        <span className="text-lg font-black text-gray-800">Tổ hợp</span>
                     </div>
                 </div>
             );
@@ -68,7 +62,7 @@
 
         function App() {
             const [history, setHistory] = useState(() => {
-                const saved = localStorage.getItem('financialData_v3');
+                const saved = localStorage.getItem('financialData_v4');
                 return saved ? JSON.parse(saved) : [{ 
                     month: new Date().toISOString().slice(0, 7), 
                     incomes: [], 
@@ -76,17 +70,149 @@
                     ratios: { NEC: 55, FFA: 10, LTS: 10, EDU: 10, PLAY: 10, GIVE: 5 }
                 }];
             });
-            const [userName, setUserName] = useState(() => localStorage.getItem('userName_v3') || 'Bạn');
             const [selectedMonth, setSelectedMonth] = useState(history[history.length - 1].month);
             const [isAddMonthOpen, setIsAddMonthOpen] = useState(false);
             const [isRatioEditOpen, setIsRatioEditOpen] = useState(false);
             const [tempRatios, setTempRatios] = useState({});
 
             useEffect(() => {
-                localStorage.setItem('financialData_v3', JSON.stringify(history));
-                localStorage.setItem('userName_v3', userName);
-            }, [history, userName]);
+                localStorage.setItem('financialData_v4', JSON.stringify(history));
+            }, [history]);
 
             const currentRecord = history.find(r => r.month === selectedMonth) || history[0];
 
-            const balances = useMemo
+            const balances = useMemo(() => {
+                const res = {}; const cumul = {};
+                [...history].sort((a, b) => a.month.localeCompare(b.month)).forEach(rec => {
+                    const totalInc = rec.incomes.reduce((s, i) => s + i.amount, 0);
+                    const ratios = rec.ratios || { NEC: 55, FFA: 10, LTS: 10, EDU: 10, PLAY: 10, GIVE: 5 };
+                    res[rec.month] = JAR_CONFIG.map(j => {
+                        const perc = ratios[j.id] || 0;
+                        const added = (totalInc * perc) / 100;
+                        const spent = rec.expenses.filter(e => e.jarId === j.id).reduce((s, e) => s + e.amount, 0);
+                        cumul[j.id] = (cumul[j.id] || 0) + added - spent;
+                        return { ...j, percentage: perc, amount: cumul[j.id], spentThisMonth: spent };
+                    });
+                });
+                return res;
+            }, [history]);
+
+            const currentBalances = balances[selectedMonth] || [];
+
+            const addTransaction = (type, jarId = null) => {
+                const amount = prompt("Nhập số tiền (đ):");
+                const desc = prompt("Mô tả:");
+                if (amount && desc) {
+                    setHistory(old => old.map(r => r.month === selectedMonth ? {
+                        ...r, [type === 'income' ? 'incomes' : 'expenses']: [...r[type === 'income' ? 'incomes' : 'expenses'], 
+                        { id: Date.now().toString(), amount: parseInt(amount), description: desc, jarId }]
+                    } : r));
+                }
+            };
+
+            const saveRatios = () => {
+                const total = Object.values(tempRatios).reduce((s, v) => s + (parseInt(v) || 0), 0);
+                if (total !== 100) {
+                    alert(`Tổng là ${total}%. Vui lòng điều chỉnh lại cho đúng 100%!`);
+                    return;
+                }
+                setHistory(old => old.map(r => r.month === selectedMonth ? { ...r, ratios: tempRatios } : r));
+                setIsRatioEditOpen(false);
+            };
+
+            return (
+                <div className="max-w-md mx-auto min-h-screen bg-gray-50 pb-24">
+                    <header className="p-4 bg-white shadow-sm flex justify-between items-center sticky top-0 z-40">
+                        <h1 className="font-black text-xl text-gray-800 tracking-tighter">6 TÚI</h1>
+                        <div className="flex gap-2">
+                             <button onClick={() => { setTempRatios(currentRecord.ratios); setIsRatioEditOpen(true); }} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-xl text-lg">⚙️</button>
+                             <button onClick={() => setIsAddMonthOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-blue-100 italic">{selectedMonth}</button>
+                        </div>
+                    </header>
+
+                    <main className="px-4 space-y-4 pt-2">
+                        <PieChart data={currentBalances} />
+
+                        <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 text-center">
+                            <p className="text-gray-400 text-[10px] uppercase font-bold mb-1 tracking-widest">Thu nhập tháng {selectedMonth}</p>
+                            <div className="text-3xl font-black text-blue-600 mb-4 tracking-tighter">
+                                {new Intl.NumberFormat('vi-VN').format(currentRecord.incomes.reduce((s, i) => s + i.amount, 0))} ₫
+                            </div>
+                            <button onClick={() => addTransaction('income')} className="w-full py-3.5 bg-gray-900 text-white rounded-2xl font-bold text-sm shadow-xl active:scale-95 transition-all">+ Thêm thu nhập</button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 pb-10">
+                            {currentBalances.map(jar => (
+                                <div key={jar.id} className="bg-white p-4 rounded-[1.5rem] shadow-sm border border-gray-100 border-b-4 border-b-blue-100">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl">{jar.icon}</div>
+                                            <div>
+                                                <h4 className="font-bold text-sm text-gray-800">{jar.name}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold">{jar.percentage}%</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-black text-gray-800 text-lg">{new Intl.NumberFormat('vi-VN').format(jar.amount)} ₫</div>
+                                            <div className="text-[10px] text-red-400 font-bold">-{new Intl.NumberFormat('vi-VN').format(jar.spentThisMonth)} ₫</div>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => addTransaction('expense', jar.id)} className="mt-3 w-full py-2 bg-gray-50 text-gray-400 rounded-xl text-[10px] font-bold uppercase tracking-widest active:bg-blue-50 active:text-blue-500">Ghi chi tiêu</button>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+
+                    {isRatioEditOpen && (
+                        <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-md flex items-end sm:items-center justify-center p-4 z-50">
+                            <div className="bg-white p-6 rounded-[2.5rem] w-full max-w-sm shadow-2xl animate-in slide-in-from-bottom duration-300">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-black text-gray-800 tracking-tighter">Thiết lập tỷ lệ</h3>
+                                    <div className={`px-3 py-1 rounded-full text-sm font-black ${Object.values(tempRatios).reduce((s, v) => s + (parseInt(v) || 0), 0) === 100 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                        {Object.values(tempRatios).reduce((s, v) => s + (parseInt(v) || 0), 0)}%
+                                    </div>
+                                </div>
+                                <div className="space-y-3 mb-8">
+                                    {JAR_CONFIG.map(jar => (
+                                        <div key={jar.id} className="flex items-center justify-between p-2">
+                                            <span className="text-sm font-bold text-gray-500">{jar.name}</span>
+                                            <div className="flex items-center gap-2">
+                                                <input type="number" value={tempRatios[jar.id] || 0} onChange={e => setTempRatios({...tempRatios, [jar.id]: e.target.value})} className="w-16 p-2 text-center font-black text-blue-600 bg-gray-100 rounded-xl focus:ring-2 ring-blue-500 outline-none" />
+                                                <span className="text-gray-300 font-bold">%</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setIsRatioEditOpen(false)} className="flex-1 py-4 text-gray-400 font-bold text-sm">Hủy bỏ</button>
+                                    <button onClick={saveRatios} className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200">Xác nhận Lưu</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isAddMonthOpen && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+                            <div className="bg-white p-8 rounded-[2rem] w-full shadow-2xl">
+                                <h3 className="font-black text-gray-800 mb-6">Đổi tháng làm việc</h3>
+                                <input type="month" className="w-full p-4 bg-gray-100 rounded-2xl mb-6 font-black text-blue-600 outline-none" onChange={(e) => {
+                                    const m = e.target.value;
+                                    if(m) {
+                                        if(!history.find(h => h.month === m)) {
+                                            setHistory(old => [...old, { month: m, incomes: [], expenses: [], ratios: currentRecord.ratios }].sort((a,b) => a.month.localeCompare(b.month)));
+                                        }
+                                        setSelectedMonth(m); setIsAddMonthOpen(false);
+                                    }
+                                }} />
+                                <button onClick={() => setIsAddMonthOpen(false)} className="w-full py-2 text-gray-400 font-bold">Đóng lại</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
